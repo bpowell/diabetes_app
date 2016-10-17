@@ -35,13 +35,17 @@ export default class diabetes extends Component {
     this.setState({modalVis: vis});
   }
 
-  updateList(text) {
+  updateText(text) {
+    this.setState({text: text});
+  }
+
+  updateList() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     q = this.state.q;
-    q.push(text);
+    q.push(this.state.text);
     this.setState({q: q});
     this.setState({glucose: ds.cloneWithRows(this.state.q)});
-    console.log(text);
+    this.setModalState(false);
   }
 
   render() {
@@ -51,11 +55,11 @@ export default class diabetes extends Component {
         <Modal visible={this.state.modalVis} onRequestClose={() => {}}>
             <View>
                 <Text>Hello World!</Text>
-                <TextInput onSubmitEditing={ (event) => this.updateList(event.nativeEvent.text) } />
+                <TextInput onChange={ (event) => this.updateText(event.nativeEvent.text) } keyboardType='numeric' />
                 <TouchableHighlight onPress={ () => this.setModalState(false) }>
                     <Text>Close</Text>
                 </TouchableHighlight>
-                <TouchableHighlight onPress={ () => this.setModalState(false) }>
+                <TouchableHighlight onPress={ () => this.updateList() }>
                     <Text>Done</Text>
                 </TouchableHighlight>
             </View>
