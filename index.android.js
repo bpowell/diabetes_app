@@ -19,6 +19,8 @@ import {
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons';
 
+import SQLite from 'react-native-sqlite-storage';
+
 export default class diabetes extends Component {
   constructor() {
     super();
@@ -28,7 +30,26 @@ export default class diabetes extends Component {
         modalVis: false,
         text: '',
         q: [],
+        db: SQLite.openDatabase("test.db", "1.0", "Test database", 200000, this.q3, this.q1),
     };
+
+    this.state.db.transaction((tx) => {
+        tx.executeSql('create table glucose(id integer primary key, value integer)', [], (tx, results) => {
+            console.log("created table");
+        });
+    });
+  }
+
+  q1(err) {
+    console.log("SQL ERROR: " + err);
+  }
+
+  q2() {
+    console.log("SQL executed fine");
+  }
+
+  q3() {
+    console.log("db opened");
   }
 
   setModalState(vis) {
