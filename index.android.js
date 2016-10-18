@@ -24,19 +24,48 @@ import SQLite from 'react-native-sqlite-storage';
 export default class diabetes extends Component {
   constructor() {
     super();
-    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     this.state = {
-        glucose: ds.cloneWithRows(['row 1', 'row 2']),
+        glucose: undefined,
         modalVis: false,
         text: '',
-        q: [],
-        db: SQLite.openDatabase("test.db", "1.0", "Test database", 200000, this.q3, this.q1),
+        glucoseLevels: [],
+        db: null,
+        done: false,
     };
+  }
 
-    this.state.db.transaction((tx) => {
+  componentDidMount() {
+    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+    var values = [];
+
+    let db = SQLite.openDatabase("test.db", "1.0", "Test database", 200000, this.q3, this.q1);
+    db.transaction((tx) => {
         tx.executeSql('create table glucose(id integer primary key, value integer)', [], (tx, results) => {
             console.log("created table");
         });
+    });
+
+    db.transaction((tx) => {
+        tx.executeSql('select value from glucose', [], (tx, results) => {
+            console.log("selecting...");
+            let rows = results.rows.raw();
+            console.log(rows);
+            rows.map(row => {
+                var glucoseLevels = this.state.glucoseLevels.slice();
+                glucoseLevels.push(row.value);
+                this.setState({glucoseLevels:glucoseLevels,});
+            });
+            this.setState({
+                glucose: ds.cloneWithRows(this.state.glucoseLevels),
+                done: true,
+            });
+        });
+    });
+
+    console.log(values);
+
+    this.setState({
+        db: db,
     });
   }
 
@@ -60,16 +89,29 @@ export default class diabetes extends Component {
     this.setState({text: text});
   }
 
+  addItemToDB(text) {
+    this.state.db.transaction((tx) => {
+      tx.executeSql('insert into glucose(value) values(?)', [text], (tx, results) => {
+        console.log("inserted");
+        console.log(results);
+      });
+    });
+  }
+
   updateList() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    q = this.state.q;
-    q.push(this.state.text);
-    this.setState({q: q});
-    this.setState({glucose: ds.cloneWithRows(this.state.q)});
+    glucoseLevels = this.state.glucoseLevels;
+    glucoseLevels.push(this.state.text);
+    this.addItemToDB(this.state.text);
+    this.setState({
+        glucoseLevels: glucoseLevels,
+        glucose: ds.cloneWithRows(this.state.glucoseLevels),
+    });
     this.setModalState(false);
   }
 
   render() {
+    if(this.state.done === true) {
     return (
       <View style={styles.container}>
         <ListView dataSource={this.state.glucose} renderRow={(rowData) => <Text>{rowData}</Text>} />
@@ -95,6 +137,9 @@ export default class diabetes extends Component {
         </ActionButton>
       </View>
     );
+    } else {
+        return (<View style={styles.container}><Text>Not ready</Text></View>);
+    }
   }
 }
 
