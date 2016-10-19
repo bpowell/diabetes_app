@@ -14,6 +14,7 @@ import {
   Modal,
   TouchableHighlight,
   DatePickerAndroid,
+  TimePickerAndroid,
   View
 } from 'react-native';
 
@@ -33,7 +34,17 @@ export default class diabetes extends Component {
         db: null,
         done: false,
         currentDate: new Date().toLocaleDateString(),
+        currentTime: this.getTime(),
     };
+  }
+
+  getTime() {
+      var d = new Date();
+      return this._formatTime(d.getHours(), d.getMinutes());
+  }
+
+  _formatTime(hour, minute) {
+      return hour + ':' + (minute < 10 ? '0' + minute : minute);
   }
 
   datePicker = async () => {
@@ -43,6 +54,20 @@ export default class diabetes extends Component {
               var date = new Date(year, month, day);
               this.setState({
                   currentDate: date.toLocaleDateString(),
+              });
+          }
+          console.log(this.state);
+      } catch ({code, message}) {
+          console.warn(`Error in example: `, message);
+      }
+  };
+
+  timePicker = async () => {
+      try {
+          const {action, minute, hour} = await TimePickerAndroid.open();
+          if (action === TimePickerAndroid.timeSetAction) {
+              this.setState({
+                  currentTime: this._formatTime(hour, minute),
               });
           }
           console.log(this.state);
@@ -136,6 +161,9 @@ export default class diabetes extends Component {
             <View>
                 <TouchableHighlight onPress={this.datePicker.bind(this)}>
                     <Text style={styles.text}>{this.state.currentDate}</Text>
+                </TouchableHighlight>
+                <TouchableHighlight onPress={this.timePicker.bind(this)}>
+                    <Text style={styles.text}>{this.state.currentTime}</Text>
                 </TouchableHighlight>
                 <Text>Hello World!</Text>
                 <TextInput onChange={ (event) => this.updateText(event.nativeEvent.text) } keyboardType='numeric' />
