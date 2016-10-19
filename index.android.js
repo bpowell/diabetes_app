@@ -13,6 +13,7 @@ import {
   ListView,
   Modal,
   TouchableHighlight,
+  DatePickerAndroid,
   View
 } from 'react-native';
 
@@ -31,8 +32,24 @@ export default class diabetes extends Component {
         glucoseLevels: [],
         db: null,
         done: false,
+        currentDate: new Date().toLocaleDateString(),
     };
   }
+
+  datePicker = async () => {
+      try {
+          const {action, year, month, day} = await DatePickerAndroid.open();
+          if (action !== DatePickerAndroid.dismissedAction) {
+              var date = new Date(year, month, day);
+              this.setState({
+                  currentDate: date.toLocaleDateString(),
+              });
+          }
+          console.log(this.state);
+      } catch ({code, message}) {
+          console.warn(`Error in example: `, message);
+      }
+  };
 
   componentDidMount() {
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
@@ -117,6 +134,9 @@ export default class diabetes extends Component {
         <ListView dataSource={this.state.glucose} renderRow={(rowData) => <Text>{rowData}</Text>} />
         <Modal visible={this.state.modalVis} onRequestClose={() => {}}>
             <View>
+                <TouchableHighlight onPress={this.datePicker.bind(this)}>
+                    <Text style={styles.text}>{this.state.currentDate}</Text>
+                </TouchableHighlight>
                 <Text>Hello World!</Text>
                 <TextInput onChange={ (event) => this.updateText(event.nativeEvent.text) } keyboardType='numeric' />
                 <TouchableHighlight onPress={ () => this.setModalState(false) }>
