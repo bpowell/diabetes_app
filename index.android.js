@@ -30,7 +30,6 @@ export default class diabetes extends Component {
         glucose: undefined,
         modalVis: false,
         text: '',
-        glucoseLevels: [],
         db: null,
         done: false,
         currentDate: new Date().toLocaleDateString(),
@@ -56,7 +55,6 @@ export default class diabetes extends Component {
                   currentDate: date.toLocaleDateString(),
               });
           }
-          console.log(this.state);
       } catch ({code, message}) {
           console.warn(`Error in example: `, message);
       }
@@ -70,7 +68,6 @@ export default class diabetes extends Component {
                   currentTime: this._formatTime(hour, minute),
               });
           }
-          console.log(this.state);
       } catch ({code, message}) {
           console.warn(`Error in example: `, message);
       }
@@ -98,9 +95,7 @@ export default class diabetes extends Component {
     db.transaction((tx) => {
         tx.executeSql('select level, date, time from glucose', [], (tx, results) => {
             var glucoseLevels = [];
-            console.log("selecting...");
             let rows = results.rows.raw();
-            console.log(rows);
             rows.map(row => {
                 glucoseLevels.push({
                     level: row.level,
@@ -139,8 +134,6 @@ export default class diabetes extends Component {
   addItemToDB(text, date, time) {
     this.state.db.transaction((tx) => {
       tx.executeSql('insert into glucose(level, date, time) values(?,?,?)', [text, date, time], (tx, results) => {
-        console.log("inserted");
-        console.log(results);
       });
     });
   }
