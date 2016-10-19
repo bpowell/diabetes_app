@@ -77,37 +77,42 @@ export default class diabetes extends Component {
   };
 
   componentDidMount() {
-    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    var values = [];
-
     let db = SQLite.openDatabase("test.db", "1.0", "Test database", 200000, this.q3, this.q1);
+
+    this.setState({
+        db: db,
+    });
+
     db.transaction((tx) => {
-        tx.executeSql('create table glucose(id integer primary key, value integer)', [], (tx, results) => {
+        tx.executeSql('create table glucose(id integer primary key, level integer, date text, time text)', [], (tx, results) => {
             console.log("created table");
         });
     });
 
+    this.getValuesFromDB(db);
+
+  }
+
+  getValuesFromDB(db) {
+    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     db.transaction((tx) => {
-        tx.executeSql('select value from glucose', [], (tx, results) => {
+        tx.executeSql('select level, date, time from glucose', [], (tx, results) => {
+            var glucoseLevels = [];
             console.log("selecting...");
             let rows = results.rows.raw();
             console.log(rows);
             rows.map(row => {
-                var glucoseLevels = this.state.glucoseLevels.slice();
-                glucoseLevels.push(row.value);
-                this.setState({glucoseLevels:glucoseLevels,});
+                glucoseLevels.push({
+                    level: row.level,
+                    date: row.date,
+                    time: row.time,
+                });
             });
             this.setState({
-                glucose: ds.cloneWithRows(this.state.glucoseLevels),
+                glucose: ds.cloneWithRows(glucoseLevels),
                 done: true,
             });
         });
-    });
-
-    console.log(values);
-
-    this.setState({
-        db: db,
     });
   }
 
@@ -131,9 +136,9 @@ export default class diabetes extends Component {
     this.setState({text: text});
   }
 
-  addItemToDB(text) {
+  addItemToDB(text, date, time) {
     this.state.db.transaction((tx) => {
-      tx.executeSql('insert into glucose(value) values(?)', [text], (tx, results) => {
+      tx.executeSql('insert into glucose(level, date, time) values(?,?,?)', [text, date, time], (tx, results) => {
         console.log("inserted");
         console.log(results);
       });
@@ -141,14 +146,8 @@ export default class diabetes extends Component {
   }
 
   updateList() {
-    const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    glucoseLevels = this.state.glucoseLevels;
-    glucoseLevels.push(this.state.text);
-    this.addItemToDB(this.state.text);
-    this.setState({
-        glucoseLevels: glucoseLevels,
-        glucose: ds.cloneWithRows(this.state.glucoseLevels),
-    });
+    this.addItemToDB(this.state.text, this.state.currentDate, this.state.currentTime);
+    this.getValuesFromDB(this.state.db);
     this.setModalState(false);
   }
 
@@ -156,7 +155,7 @@ export default class diabetes extends Component {
     if(this.state.done === true) {
     return (
       <View style={styles.container}>
-        <ListView dataSource={this.state.glucose} renderRow={(rowData) => <Text>{rowData}</Text>} />
+        <ListView dataSource={this.state.glucose} renderRow={(rowData) => <Text>{rowData.date}  {rowData.time} - {rowData.level}</Text>} />
         <Modal visible={this.state.modalVis} onRequestClose={() => {}}>
             <View>
                 <TouchableHighlight onPress={this.datePicker.bind(this)}>
