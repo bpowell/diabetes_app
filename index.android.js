@@ -21,6 +21,12 @@ import {
 import ActionButton from 'react-native-action-button';
 import Icon from 'react-native-vector-icons/Ionicons';
 
+const MK = require('react-native-material-kit');
+const {
+      MKButton,
+        MKColor,
+} = MK;
+
 import SQLite from 'react-native-sqlite-storage';
 
 export default class diabetes extends Component {
@@ -145,19 +151,25 @@ export default class diabetes extends Component {
   }
 
   render() {
+    const ColoredRaisedButton = MKButton.coloredButton().build();
     if(this.state.done === true) {
     return (
       <View style={styles.container}>
         <ListView dataSource={this.state.glucose} renderRow={(rowData) => <Text>{rowData.date}  {rowData.time} - {rowData.level}</Text>} />
         <Modal visible={this.state.modalVis} onRequestClose={() => {}}>
             <View>
-                <TouchableHighlight onPress={this.datePicker.bind(this)}>
-                    <Text style={styles.text}>{this.state.currentDate}</Text>
-                </TouchableHighlight>
-                <TouchableHighlight onPress={this.timePicker.bind(this)}>
-                    <Text style={styles.text}>{this.state.currentTime}</Text>
-                </TouchableHighlight>
-                <Text>Hello World!</Text>
+                <View style={{flexDirection: 'row'}}>
+                    <Text>Date:</Text>
+                    <ColoredRaisedButton onPress={this.datePicker.bind(this)}>
+                        <Text style={styles.text}>{this.state.currentDate}</Text>
+                    </ColoredRaisedButton>
+                </View>
+                <View style={{flexDirection: 'row'}}>
+                    <Text>Time:</Text>
+                    <ColoredRaisedButton onPress={this.timePicker.bind(this)}>
+                        <Text style={styles.text}>{this.state.currentTime}</Text>
+                    </ColoredRaisedButton>
+                </View>
                 <TextInput onChange={ (event) => this.updateText(event.nativeEvent.text) } keyboardType='numeric' />
                 <TouchableHighlight onPress={ () => this.setModalState(false) }>
                     <Text>Close</Text>
